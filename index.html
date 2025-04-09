@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1 {
+            color: #005580;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .input-section, .result-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #005580;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #003d5c;
+        }
+        
+        .result-section {
+            background-color: #f0f7fa;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #005580;
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        .total-row {
+            font-weight: bold;
+            background-color: #e6f2f7 !important;
+        }
+        
+        .currency-switch {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .currency-switch label {
+            display: inline;
+            margin-right: 5px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .checkbox-group input {
+            width: auto;
+        }
+        
+        #amendments {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f5f5f5;
+        }
+        
+        #addAmendment {
+            width: auto;
+            padding: 5px 10px;
+            margin-top: 5px;
+        }
+        
+        .amendment-item {
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .remove-amendment {
+            background-color: #ff4d4d;
+            color: white;
+            padding: 3px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        
+        .remove-amendment:hover {
+            background-color: #e60000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="input-section">
+            <div class="currency-switch">
+                <div class="checkbox-group">
+                    <input type="radio" id="usd" name="currency" value="USD" checked>
+                    <label for="usd">USD</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="radio" id="vnd" name="currency" value="VND">
+                    <label for="vnd">VND</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="lcValue">L/C Value:</label>
+                <input type="number" id="lcValue" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="collateralType">Collateral Type:</label>
+                <select id="collateralType">
+                    <option value="full">100% Secured by Deposit</option>
+                    <option value="partial">Partially Secured by Deposit</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="collateralValue">Collateral Value (if partial):</label>
+                <input type="number" id="collateralValue" min="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="lcStartDate">L/C Issuance Date:</label>
+                <input type="date" id="lcStartDate">
+            </div>
+            
+            <div class="form-group">
+                <label for="lcExpiry">L/C Expiry Date:</label>
+                <input type="date" id="lcExpiry">
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="consulting">
+                <label for="consulting">Include LC Consulting Fee</label>
+            </div>
+            
+            <div class="form-group">
+                <label for="paymentTerm">Payment Term (days):</label>
+                <input type="number" id="paymentTerm" min="0" value="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="documentValue">Document Value (if different from LC value):</label>
+                <input type="number" id="documentValue" min="0">
+            </div>
+            
+            <div id="amendments">
+                <h3>Amendments</h3>
+                <button id="addAmendment">+ Add Amendment</button>
+                <div id="amendmentsList"></div>
+            </div>
+            
+            <button id="calculate">Calculate Fees</button>
+        </div>
+        
+        <div class="result-section">
+            <h2>Fee Calculation Results</h2>
+            <div id="resultDetails"></div>
+            <table id="feeTable">
+                <thead>
+                    <tr>
+                        <th>Fee Description</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="feeTableBody">
+                    <!-- Results will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Constants
+            const MIN_FEE_USD = {
+                issuance: 50,
+                amendment: 20,
+                usance: 30,
+                consulting: 20
+            };
+            
+            const MAX_FEE_USD = {
+                issuance: 500,
+                payment: 500
+            };
+            
+            const MIN_FEE_VND = {
+                issuance: 500000,
+                amendment: 200000,
+                usance: 500000
+            };
+            
+            const MAX_FEE_VND = {
+                issuance: 10000000,
+                payment: 5000000
+            };
+            
+            const RATES = {
+                issuance: 0.0006, // 0.06%
+                payment: 0.002,   // 0.2% for USD, changed to 0.0005 for VND
+                usance: 0.012     // 1.2% per year
+            };
+            
+            // DOM Elements
+            const calculateBtn = document.getElementById('calculate');
+            const addAmendmentBtn = document.getElementById('addAmendment');
+            const amendmentsList = document.getElementById('amendmentsList');
+            let amendmentCount = 0;
+            
+            // Event Listeners
+            calculateBtn.addEventListener('click', calculateFees);
+            addAmendmentBtn.addEventListener('click', addAmendment);
+            
+            // Initialize the form
+            document.getElementById('lcStartDate').valueAsDate = new Date();
+            let expiry = new Date();
+            expiry.setDate(expiry.getDate() + 90);
+            document.getElementById('lcExpiry').valueAsDate = expiry;
+            
+            // Add the first amendment section
+            addAmendment();
+            
+            function addAmendment() {
+                const amendmentId = amendmentCount++;
+                const amendmentDiv = document.createElement('div');
+                amendmentDiv.className = 'amendment-item';
+                amendmentDiv.dataset.id = amendmentId;
+                
+                amendmentDiv.innerHTML = `
+                    <div class="form-group">
+                        <label for="amendType${amendmentId}">Amendment Type:</label>
+                        <select id="amendType${amendmentId}" class="amendType">
+                            <option value="value">Increase Value</option>
+                            <option value="collateral">Change Collateral</option>
+                            <option value="extend">Extend Validity</option>
+                            <option value="other">Other Amendment</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group valueAmount">
+                        <label for="amendValue${amendmentId}">Additional Value:</label>
+                        <input type="number" id="amendValue${amendmentId}" min="0" class="amendValue">
+                    </div>
+                    
+                    <div class="form-group collateralAmount" style="display:none;">
+                        <label for="amendCollateral${amendmentId}">Changed Collateral Value:</label>
+                        <input type="number" id="amendCollateral${amendmentId}" min="0" class="amendCollateral">
+                    </div>
+                    
+                    <div class="form-group extendDays" style="display:none;">
+                        <label for="amendExpiry${amendmentId}">New Expiry Date:</label>
+                        <input type="date" id="amendExpiry${amendmentId}" class="amendExpiry">
+                    </div>
+                    
+                    <button class="remove-amendment">Remove</button>
+                `;
+                
+                amendmentsList.appendChild(amendmentDiv);
+                
+                // Set default expiry date for extension
+                let newExpiry = new Date();
+                newExpiry.setDate(newExpiry.getDate() + 120);
+                document.getElementById(`amendExpiry${amendmentId}`).valueAsDate = newExpiry;
+                
+                // Add event listeners for the new amendment
+                amendmentDiv.querySelector('.remove-amendment').addEventListener('click', function() {
+                    amendmentsList.removeChild(amendmentDiv);
+                });
+                
+                amendmentDiv.querySelector('.amendType').addEventListener('change', function(e) {
+                    const type = e.target.value;
+                    const valueField = amendmentDiv.querySelector('.valueAmount');
+                    const collateralField = amendmentDiv.querySelector('.collateralAmount');
+                    const extendField = amendmentDiv.querySelector('.extendDays');
+                    
+                    valueField.style.display = type === 'value' ? 'block' : 'none';
+                    collateralField.style.display = type === 'collateral' ? 'block' : 'none';
+                    extendField.style.display = type === 'extend' ? 'block' : 'none';
+                });
+            }
+            
+            function calculateFees() {
+                const currency = document.querySelector('input[name="currency"]:checked').value;
+                const lcValue = parseFloat(document.getElementById('lcValue').value) || 0;
+                const collateralType = document.getElementById('collateralType').value;
+                const collateralValue = parseFloat(document.getElementById('collateralValue').value) || lcValue;
+                const startDate = new Date(document.getElementById('lcStartDate').value);
+                const expiryDate = new Date(document.getElementById('lcExpiry').value);
+                const consulting = document.getElementById('consulting').checked;
+                const paymentTerm = parseInt(document.getElementById('paymentTerm').value) || 0;
+                let documentValue = parseFloat(document.getElementById('documentValue').value);
+                
+                if (isNaN(documentValue)) {
+                    documentValue = lcValue;
+                }
+                
+                // Calculate number of days between start and expiry
+                const daysDiff = Math.round((expiryDate - startDate) / (1000 * 60 * 60 * 24));
+                
+                // Initialize fee object
+                let fees = [];
+                let totalFee = 0;
+                
+                // Calculate issuance fee
+                let issuanceFee;
+                if (currency === 'USD') {
+                    if (collateralType === 'full') {
+                        issuanceFee = lcValue * RATES.issuance;
+                        issuanceFee = Math.min(Math.max(issuanceFee, MIN_FEE_USD.issuance), MAX_FEE_USD.issuance);
+                    } else {
+                        issuanceFee = collateralValue * RATES.issuance;
+                        issuanceFee = Math.max(issuanceFee, MIN_FEE_USD.issuance);
+                    }
+                } else { // VND
+                    if (collateralType === 'full') {
+                        issuanceFee = lcValue * RATES.issuance;
+                        issuanceFee = Math.min(Math.max(issuanceFee, MIN_FEE_VND.issuance), MAX_FEE_VND.issuance);
+                    } else {
+                        issuanceFee = collateralValue * RATES.issuance;
+                        issuanceFee = Math.max(issuanceFee, MIN_FEE_VND.issuance);
+                    }
+                }
+                
+                fees.push({
+                    description: "L/C Issuance Fee",
+                    amount: issuanceFee.toFixed(2)
+                });
+                totalFee += issuanceFee;
+                
+                // Process amendments
+                const amendments = document.querySelectorAll('.amendment-item');
+                amendments.forEach(amendment => {
+                    const amendType = amendment.querySelector('.amendType').value;
+                    let amendFee = 0;
+                    
+                    if (amendType === 'value') {
+                        const additionalValue = parseFloat(amendment.querySelector('.amendValue').value) || 0;
+                        if (currency === 'USD') {
+                            amendFee = additionalValue * RATES.issuance;
+                            amendFee = Math.max(amendFee, MIN_FEE_USD.amendment);
+                        } else {
+                            amendFee = additionalValue * RATES.issuance;
+                            amendFee = Math.max(amendFee, MIN_FEE_VND.amendment);
+                        }
+                        fees.push({
+                            description: "Amendment: Increase Value",
+                            amount: amendFee.toFixed(2)
+                        });
+                    } else if (amendType === 'collateral') {
+                        const changedCollateral = parseFloat(amendment.querySelector('.amendCollateral').value) || 0;
+                        if (currency === 'USD') {
+                            amendFee = changedCollateral * RATES.issuance;
+                            amendFee = Math.max(amendFee, MIN_FEE_USD.amendment);
+                        } else {
+                            amendFee = changedCollateral * RATES.issuance;
+                            amendFee = Math.max(amendFee, MIN_FEE_VND.amendment);
+                        }
+                        fees.push({
+                            description: "Amendment: Change Collateral",
+                            amount: amendFee.toFixed(2)
+                        });
+                    } else if (amendType === 'extend') {
+                        const newExpiryDate = new Date(amendment.querySelector('.amendExpiry').value);
+                        const extensionDays = Math.round((newExpiryDate - expiryDate) / (1000 * 60 * 60 * 24));
+                        
+                        if (extensionDays > 0) {
+                            if (currency === 'USD') {
+                                amendFee = lcValue * RATES.issuance * (extensionDays / daysDiff);
+                                amendFee = Math.max(amendFee, MIN_FEE_USD.amendment);
+                            } else {
+                                amendFee = lcValue * RATES.issuance * (extensionDays / daysDiff);
+                                amendFee = Math.max(amendFee, MIN_FEE_VND.amendment);
+                            }
+                            fees.push({
+                                description: `Amendment: Extend Validity (${extensionDays} days)`,
+                                amount: amendFee.toFixed(2)
+                            });
+                        } else {
+                            fees.push({
+                                description: "Amendment: Extend Validity (Invalid date)",
+                                amount: "0.00"
+                            });
+                            amendFee = 0;
+                        }
+                    } else if (amendType === 'other') {
+                        if (currency === 'USD') {
+                            amendFee = MIN_FEE_USD.amendment;
+                        } else {
+                            amendFee = MIN_FEE_VND.amendment;
+                        }
+                        fees.push({
+                            description: "Amendment: Other Changes",
+                            amount: amendFee.toFixed(2)
+                        });
+                    }
+                    
+                    totalFee += amendFee;
+                });
+                
+                // Payment fee
+                let paymentFee;
+                if (currency === 'USD') {
+                    paymentFee = documentValue * RATES.payment;
+                    paymentFee = Math.min(Math.max(paymentFee, 30), MAX_FEE_USD.payment);
+                } else {
+                    paymentFee = documentValue * 0.0005; // 0.05% for VND
+                    paymentFee = Math.min(Math.max(paymentFee, 100000), MAX_FEE_VND.payment);
+                }
+                
+                fees.push({
+                    description: "Payment of Documents",
+                    amount: paymentFee.toFixed(2)
+                });
+                totalFee += paymentFee;
+                
+                // Usance payment fee if applicable
+                if (paymentTerm > 0) {
+                    let usanceFee;
+                    if (currency === 'USD') {
+                        usanceFee = (RATES.usance * documentValue * paymentTerm) / 365;
+                        usanceFee = Math.max(usanceFee, MIN_FEE_USD.usance);
+                    } else {
+                        usanceFee = (RATES.usance * documentValue * paymentTerm) / 365;
+                        usanceFee = Math.max(usanceFee, MIN_FEE_VND.usance);
+                    }
+                    
+                    fees.push({
+                        description: `Usance Payment Fee (${paymentTerm} days)`,
+                        amount: usanceFee.toFixed(2)
+                    });
+                    totalFee += usanceFee;
+                }
+                
+                // Consulting fee if checked
+                if (consulting) {
+                    let consultingFee;
+                    if (currency === 'USD') {
+                        consultingFee = MIN_FEE_USD.consulting;
+                    } else {
+                        consultingFee = 500000; // Approximate VND equivalent
+                    }
+                    
+                    fees.push({
+                        description: "L/C Consulting Fee",
+                        amount: consultingFee.toFixed(2)
+                    });
+                    totalFee += consultingFee;
+                }
+                
+                // L/C Transaction processing fee
+                let processingFee;
+                if (currency === 'USD') {
+                    processingFee = 20;
+                } else {
+                    processingFee = 300000;
+                }
+                
+                fees.push({
+                    description: "L/C Transaction Processing Fee",
+                    amount: processingFee.toFixed(2)
+                });
+                totalFee += processingFee;
+                
+                // Display results
+                displayResults(fees, totalFee, currency);
+            }
+            
+            function displayResults(fees, totalFee, currency) {
+                const feeTableBody = document.getElementById('feeTableBody');
+                const resultDetails = document.getElementById('resultDetails');
+                
+                // Clear previous results
+                feeTableBody.innerHTML = '';
+                
+                // Display transaction details
+                const lcValue = parseFloat(document.getElementById('lcValue').value) || 0;
+                const startDate = new Date(document.getElementById('lcStartDate').value);
+                const expiryDate = new Date(document.getElementById('lcExpiry').value);
+                const paymentTerm = parseInt(document.getElementById('paymentTerm').value) || 0;
+                
+                resultDetails.innerHTML = `
+                    <p><strong>Transaction Details:</strong></p>
+                    <p>L/C Value: ${currency} ${lcValue.toLocaleString()}</p>
+                    <p>L/C Term: ${startDate.toLocaleDateString()} to ${expiryDate.toLocaleDateString()}</p>
+                    <p>Payment Term: ${paymentTerm} days</p>
+                `;
+                
+                // Add fees to table
+                fees.forEach(fee => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${fee.description}</td>
+                        <td>${currency} ${parseFloat(fee.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    `;
+                    feeTableBody.appendChild(row);
+                });
+                
+                // Add total row
+                const totalRow = document.createElement('tr');
+                totalRow.className = 'total-row';
+                totalRow.innerHTML = `
+                    <td>Total Fees</td>
+                    <td>${currency} ${totalFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                `;
+                feeTableBody.appendChild(totalRow);
+            }
+        });
+    </script>
+</body>
+</html>
